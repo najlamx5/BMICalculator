@@ -1202,70 +1202,49 @@ if st.button(
 # RESULT BOX
 # =========================================================
 
+
+
 if st.session_state.bmi_result is not None:
 
     bmi = st.session_state.bmi_result
-
     category = st.session_state.bmi_category
 
-    ideal_weight = (
-        st.session_state.ideal_weight
-    )
+    ideal_weight = st.session_state.ideal_weight
+    healthy_min = st.session_state.healthy_weight_min
+    healthy_max = st.session_state.healthy_weight_max
 
-    healthy_min = (
-        st.session_state.healthy_weight_min
-    )
+    # -----------------------------------------------------
+    # CATEGORY COLORS
+    # -----------------------------------------------------
 
-    healthy_max = (
-        st.session_state.healthy_weight_max
-    )
+    if category == "Underweight":
+        category_background = "#dbeafe"
+        category_color = "#1d4ed8"
 
+    elif category == "Normal weight":
+        category_background = "#dcfce7"
+        category_color = "#15803d"
 
-    # =====================================================
+    elif category == "Overweight":
+        category_background = "#fef3c7"
+        category_color = "#b45309"
+
+    else:
+        category_background = "#fee2e2"
+        category_color = "#dc2626"
+
+    # -----------------------------------------------------
     # RESULT TITLE
-    # =====================================================
+    # -----------------------------------------------------
 
     st.markdown(
-        '<div class="section-title">'
-        '📊 Your Result'
-        '</div>',
+        '<div class="section-title">📊 Your Result</div>',
         unsafe_allow_html=True
     )
 
-
-    # =====================================================
-    # CATEGORY COLORS
-    # =====================================================
-
-    if category == "Underweight":
-
-        category_bg = "#dbeafe"
-        category_text = "#1e40af"
-
-    elif category == "Normal weight":
-
-        category_bg = "#dcfce7"
-        category_text = "#166534"
-
-    elif category == "Overweight":
-
-        category_bg = "#fef3c7"
-        category_text = "#92400e"
-
-    else:
-
-        category_bg = "#fee2e2"
-        category_text = "#991b1b"
-
-
-    # =====================================================
-    # BUILD RESULT HTML
-    #
-    # IMPORTANT:
-    # The HTML is stored in a Python variable.
-    # It is NOT displayed with st.code().
-    # It is NOT surrounded by Markdown code fences.
-    # =====================================================
+    # -----------------------------------------------------
+    # RESULT BOX HTML
+    # -----------------------------------------------------
 
     result_html = f"""
 <div class="result-box">
@@ -1278,11 +1257,13 @@ if st.session_state.bmi_result is not None:
         {bmi:.1f}
     </div>
 
-    <div class="category"
-         style="
-            background-color: {category_bg};
-            color: {category_text};
-         ">
+    <div
+        class="category"
+        style="
+            background:{category_background};
+            color:{category_color};
+        "
+    >
         {category}
     </div>
 
@@ -1307,7 +1288,6 @@ if st.session_state.bmi_result is not None:
             </div>
 
         </div>
-
 
         <div class="result-item">
 
@@ -1334,18 +1314,14 @@ if st.session_state.bmi_result is not None:
 </div>
 """
 
-
-    # =====================================================
-    # RENDER RESULT
-    #
-    # THIS LINE IS THE IMPORTANT FIX
-    # =====================================================
+    # IMPORTANT:
+    # Send the HTML directly to st.markdown.
+    # Do NOT use st.write(), st.code(), or Markdown ``` around it.
 
     st.markdown(
         result_html,
         unsafe_allow_html=True
     )
-
 
     # =====================================================
     # CALORIES
@@ -1354,33 +1330,26 @@ if st.session_state.bmi_result is not None:
     if st.session_state.calories_result is not None:
 
         st.markdown(
-            '<div class="section-title">'
-            '🔥 Estimated Daily Calories'
-            '</div>',
+            '<div class="section-title">🔥 Estimated Daily Calories</div>',
             unsafe_allow_html=True
         )
 
         st.info(
-            "Estimated maintenance calories: "
-            f"**{st.session_state.calories_result:,} "
-            "kcal/day**"
+            f"Estimated maintenance calories: "
+            f"**{st.session_state.calories_result:,} kcal/day**"
         )
 
         st.caption(
-            "This estimate uses the "
-            "Mifflin-St Jeor equation with a "
-            "sedentary activity factor of 1.2."
+            "This estimate uses the Mifflin-St Jeor equation "
+            "with a sedentary activity factor of 1.2."
         )
-
 
     # =====================================================
     # BMI REFERENCE
     # =====================================================
 
     st.markdown(
-        '<div class="section-title">'
-        '📚 BMI Reference'
-        '</div>',
+        '<div class="section-title">📚 BMI Reference</div>',
         unsafe_allow_html=True
     )
 
@@ -1401,6 +1370,7 @@ if st.session_state.bmi_result is not None:
             ]
         }
     )
+
 
 
 # =========================================================
