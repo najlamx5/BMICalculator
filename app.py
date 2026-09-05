@@ -1061,66 +1061,102 @@ if st.session_state.bmi_result is not None:
     healthy_min = st.session_state.healthy_weight_min
     healthy_max = st.session_state.healthy_weight_max
 
+    # -----------------------------------------------------
+    # Result heading
+    # -----------------------------------------------------
+
     st.markdown(
         '<div class="section-title">📊 Your Result</div>',
         unsafe_allow_html=True
     )
 
-    st.markdown(
-        f"""
-        <div class="result-box">
+    # -----------------------------------------------------
+    # Category styling
+    # -----------------------------------------------------
 
-            <div class="result-title">
-                YOUR BMI
-            </div>
+    if category == "Underweight":
 
-            <div class="bmi-number">
-                {bmi:.1f}
-            </div>
+        category_bg = "#dbeafe"
+        category_text = "#1e40af"
 
-            <div class="category">
-                {category}
-            </div>
+    elif category == "Normal weight":
 
-            <div class="result-details">
+        category_bg = "#dcfce7"
+        category_text = "#166534"
 
-                <div class="result-item">
+    elif category == "Overweight":
 
-                    <div class="result-icon">
-                        🎯
+        category_bg = "#fef3c7"
+        category_text = "#92400e"
+
+    else:
+
+        category_bg = "#fee2e2"
+        category_text = "#991b1b"
+
+
+    # -----------------------------------------------------
+    # IMPORTANT:
+    # Build HTML in one variable.
+    # Then render it using st.markdown().
+    # -----------------------------------------------------
+
+    result_html = f"""
+    <div class="result-box">
+
+        <div class="result-title">
+            YOUR BMI
+        </div>
+
+        <div class="bmi-number">
+            {bmi:.1f}
+        </div>
+
+        <div class="category"
+             style="
+                background-color: {category_bg};
+                color: {category_text};
+             ">
+            {category}
+        </div>
+
+        <div class="result-details">
+
+            <div class="result-item">
+
+                <div class="result-icon">
+                    🎯
+                </div>
+
+                <div class="result-content">
+
+                    <div class="result-label">
+                        Ideal Weight
                     </div>
 
-                    <div class="result-content">
-
-                        <div class="result-label">
-                            Ideal Weight
-                        </div>
-
-                        <div class="result-value">
-                            {ideal_weight:.1f} kg
-                        </div>
-
+                    <div class="result-value">
+                        {ideal_weight:.1f} kg
                     </div>
 
                 </div>
 
+            </div>
 
-                <div class="result-item">
 
-                    <div class="result-icon">
-                        ⚖️
+            <div class="result-item">
+
+                <div class="result-icon">
+                    ⚖️
+                </div>
+
+                <div class="result-content">
+
+                    <div class="result-label">
+                        Healthy Weight Range
                     </div>
 
-                    <div class="result-content">
-
-                        <div class="result-label">
-                            Healthy Weight Range
-                        </div>
-
-                        <div class="result-value">
-                            {healthy_min:.1f} – {healthy_max:.1f} kg
-                        </div>
-
+                    <div class="result-value">
+                        {healthy_min:.1f} – {healthy_max:.1f} kg
                     </div>
 
                 </div>
@@ -1128,7 +1164,16 @@ if st.session_state.bmi_result is not None:
             </div>
 
         </div>
-        """,
+
+    </div>
+    """
+
+    # -----------------------------------------------------
+    # THIS IS THE IMPORTANT FIX
+    # -----------------------------------------------------
+
+    st.markdown(
+        result_html,
         unsafe_allow_html=True
     )
 
@@ -1140,7 +1185,9 @@ if st.session_state.bmi_result is not None:
     if st.session_state.calories_result is not None:
 
         st.markdown(
-            '<div class="section-title">🔥 Estimated Daily Calories</div>',
+            '<div class="section-title">'
+            '🔥 Estimated Daily Calories'
+            '</div>',
             unsafe_allow_html=True
         )
 
@@ -1160,7 +1207,9 @@ if st.session_state.bmi_result is not None:
     # =====================================================
 
     st.markdown(
-        '<div class="section-title">📚 BMI Reference</div>',
+        '<div class="section-title">'
+        '📚 BMI Reference'
+        '</div>',
         unsafe_allow_html=True
     )
 
