@@ -1,3 +1,4 @@
+#```python
 import re
 import streamlit as st
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
@@ -35,7 +36,7 @@ DEFAULT_WEIGHT_UNIT = "Kilograms (kg)"
 
 
 # =========================================================
-# SESSION STATE
+# SESSION STATE INITIALIZATION
 # =========================================================
 
 defaults = {
@@ -53,8 +54,8 @@ defaults = {
     "weight_unit": DEFAULT_WEIGHT_UNIT,
 
     "uploaded_image": None,
-
     "ocr_text": "",
+
     "ocr_sex": None,
     "ocr_age": None,
     "ocr_height": None,
@@ -82,8 +83,12 @@ for key, value in defaults.items():
 # =========================================================
 
 def reset_application():
+    """
+    Reset the complete application to its default state.
+    This function is used as a button callback so that
+    widget-related session state is safely updated.
+    """
 
-    # Form
     st.session_state.sex = DEFAULT_SEX
     st.session_state.age = DEFAULT_AGE
 
@@ -97,26 +102,24 @@ def reset_application():
     st.session_state.height_unit = DEFAULT_HEIGHT_UNIT
     st.session_state.weight_unit = DEFAULT_WEIGHT_UNIT
 
-    # Photo
     st.session_state.uploaded_image = None
-
-    # OCR
     st.session_state.ocr_text = ""
+
     st.session_state.ocr_sex = None
     st.session_state.ocr_age = None
     st.session_state.ocr_height = None
     st.session_state.ocr_weight = None
 
-    # Results
     st.session_state.bmi_result = None
     st.session_state.bmi_category = None
+
     st.session_state.calories_result = None
 
     st.session_state.ideal_weight = None
     st.session_state.healthy_weight_min = None
     st.session_state.healthy_weight_max = None
 
-    # Change uploader key to clear uploaded file
+    # Change uploader key so Streamlit clears uploaded file
     st.session_state.uploader_key += 1
 
 
@@ -181,7 +184,7 @@ def calculate_healthy_weight_range(height_cm):
     healthy_min = 18.5 * (height_m ** 2)
     healthy_max = 24.9 * (height_m ** 2)
 
-    # Reference ideal weight based on BMI 21.7
+    # Reference point using BMI 21.7
     ideal = 21.7 * (height_m ** 2)
 
     return (
@@ -227,7 +230,7 @@ def calculate_calories(sex, age, weight_kg, height_cm):
         height_cm
     )
 
-    # Sedentary activity factor
+    # Sedentary activity estimate
     calories = bmr * 1.2
 
     return round(calories)
@@ -243,7 +246,7 @@ def preprocess_image(image):
 
     width, height = image.size
 
-    # Upscale small images
+    # Increase small images for better OCR
     if width < 1800:
 
         scale = 1800 / width
@@ -258,13 +261,12 @@ def preprocess_image(image):
     # Grayscale
     gray = ImageOps.grayscale(image)
 
-    # Improve contrast
+    # Increase contrast
     gray = ImageEnhance.Contrast(gray).enhance(3.0)
 
-    # Improve sharpness
+    # Increase sharpness
     gray = ImageEnhance.Sharpness(gray).enhance(2.5)
 
-    # Sharpen
     gray = gray.filter(ImageFilter.SHARPEN)
 
     return gray
@@ -362,10 +364,7 @@ def extract_age(text):
 
 def extract_weight(text):
 
-    # -----------------------------------------------------
-    # KG
-    # -----------------------------------------------------
-
+    # Weight in kilograms
     kg_patterns = [
 
         r"(?:weight|wt|w)\s*[:=\-]?\s*"
@@ -386,20 +385,12 @@ def extract_weight(text):
 
         for value in matches:
 
-            try:
-                weight = float(value)
+            weight = float(value)
 
-                if 10 <= weight <= 300:
-                    return round(weight, 1)
+            if 10 <= weight <= 300:
+                return round(weight, 1)
 
-            except:
-                pass
-
-
-    # -----------------------------------------------------
-    # POUNDS
-    # -----------------------------------------------------
-
+    # Weight in pounds
     lb_patterns = [
 
         r"(?:weight|wt|w)\s*[:=\-]?\s*"
@@ -420,18 +411,14 @@ def extract_weight(text):
 
         for value in matches:
 
-            try:
-                pounds = float(value)
+            pounds = float(value)
 
-                if 22 <= pounds <= 660:
+            if 22 <= pounds <= 660:
 
-                    return round(
-                        pounds_to_kg(pounds),
-                        1
-                    )
-
-            except:
-                pass
+                return round(
+                    pounds_to_kg(pounds),
+                    1
+                )
 
     return None
 
@@ -442,10 +429,7 @@ def extract_weight(text):
 
 def extract_height(text):
 
-    # -----------------------------------------------------
-    # CENTIMETERS
-    # -----------------------------------------------------
-
+    # Height in centimeters
     cm_patterns = [
 
         r"(?:height|ht|h)\s*[:=\-]?\s*"
@@ -466,21 +450,12 @@ def extract_height(text):
 
         for value in matches:
 
-            try:
+            height = float(value)
 
-                height = float(value)
+            if 50 <= height <= 250:
+                return round(height, 1)
 
-                if 50 <= height <= 250:
-                    return round(height, 1)
-
-            except:
-                pass
-
-
-    # -----------------------------------------------------
-    # FEET + INCHES
-    # -----------------------------------------------------
-
+    # Feet and inches
     ft_in_patterns = [
 
         r"(\d{1,2})\s*(?:ft|feet|foot)"
@@ -502,31 +477,19 @@ def extract_height(text):
 
         if match:
 
-            try:
+            feet = int(match.group(1))
+            inches = float(match.group(2))
 
-                feet = int(match.group(1))
-                inches = float(match.group(2))
+            if 2 <= feet <= 8 and 0 <= inches < 12:
 
-                if (
-                    2 <= feet <= 8
-                    and 0 <= inches < 12
-                ):
+                height = feet_inches_to_cm(
+                    feet,
+                    inches
+                )
 
-                    height = feet_inches_to_cm(
-                        feet,
-                        inches
-                    )
+                return round(height, 1)
 
-                    return round(height, 1)
-
-            except:
-                pass
-
-
-    # -----------------------------------------------------
-    # METERS
-    # -----------------------------------------------------
-
+    # Height in meters
     meter_patterns = [
 
         r"(?:height|ht|h)\s*[:=\-]?\s*"
@@ -547,19 +510,14 @@ def extract_height(text):
 
         for value in matches:
 
-            try:
+            meters = float(value)
 
-                meters = float(value)
+            if 0.5 <= meters <= 2.5:
 
-                if 0.5 <= meters <= 2.5:
-
-                    return round(
-                        meters * 100,
-                        1
-                    )
-
-            except:
-                pass
+                return round(
+                    meters * 100,
+                    1
+                )
 
     return None
 
@@ -624,6 +582,7 @@ st.markdown(
         font-size: 16px;
         font-weight: 700;
         margin-bottom: 25px;
+        background: #e8f5e9;
     }
 
     .result-details {
@@ -663,16 +622,19 @@ st.markdown(
         font-weight: 800;
     }
 
+    .info-card {
+        padding: 20px;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
     .footer {
         text-align: center;
         font-size: 13px;
         margin-top: 35px;
         padding-top: 20px;
-    }
-
-    .upload-note {
-        font-size: 14px;
-        margin-bottom: 10px;
     }
 
     @media (max-width: 700px) {
@@ -719,94 +681,56 @@ st.markdown(
 # =========================================================
 
 st.markdown(
-    '<div class="section-title">'
-    '📷 Upload Photo for Automatic Extraction'
-    '</div>',
+    '<div class="section-title">📷 Upload Photo for Automatic Extraction</div>',
     unsafe_allow_html=True
 )
 
-st.caption(
-    "Upload a photo containing information such as "
-    "sex, age, height, or weight."
-)
-
 uploaded_file = st.file_uploader(
-    "Choose a photo",
+    "Upload a photo containing health information",
     type=["jpg", "jpeg", "png"],
     key=f"photo_uploader_{st.session_state.uploader_key}"
 )
 
 
-# =========================================================
-# PROCESS UPLOADED IMAGE
-# =========================================================
-
 if uploaded_file is not None:
 
-    try:
+    image = Image.open(uploaded_file)
 
-        image = Image.open(uploaded_file)
+    st.session_state.uploaded_image = image
 
-        st.session_state.uploaded_image = image
+    st.image(
+        image,
+        caption="Uploaded Image",
+        use_container_width=True
+    )
 
-        st.image(
-            image,
-            caption="Uploaded Image",
-            use_container_width=True
-        )
+    if st.button(
+        "🔍 Extract Information",
+        use_container_width=True
+    ):
 
-        # -------------------------------------------------
-        # EXTRACT BUTTON
-        # -------------------------------------------------
+        with st.spinner("Reading information from the image..."):
 
-        if st.button(
-            "🔍 Extract Information",
-            use_container_width=True
-        ):
+            try:
 
-            with st.spinner(
-                "Reading information from the image..."
-            ):
+                text = extract_information(image)
 
-                try:
+                st.session_state.ocr_text = text
 
-                    text = extract_information(image)
+                st.session_state.ocr_sex = extract_sex(text)
+                st.session_state.ocr_age = extract_age(text)
+                st.session_state.ocr_height = extract_height(text)
+                st.session_state.ocr_weight = extract_weight(text)
 
-                    st.session_state.ocr_text = text
+                st.success(
+                    "Information extraction completed."
+                )
 
-                    st.session_state.ocr_sex = (
-                        extract_sex(text)
-                    )
+            except Exception as e:
 
-                    st.session_state.ocr_age = (
-                        extract_age(text)
-                    )
-
-                    st.session_state.ocr_height = (
-                        extract_height(text)
-                    )
-
-                    st.session_state.ocr_weight = (
-                        extract_weight(text)
-                    )
-
-                    st.success(
-                        "Information extraction completed."
-                    )
-
-                    st.rerun()
-
-                except Exception as e:
-
-                    st.error(
-                        f"Could not process the image: {e}"
-                    )
-
-    except Exception as e:
-
-        st.error(
-            f"Could not open the uploaded image: {e}"
-        )
+                st.error(
+                    f"Could not process the image: {e}"
+                )
 
 
 # =========================================================
@@ -816,18 +740,11 @@ if uploaded_file is not None:
 if st.session_state.ocr_text:
 
     st.markdown(
-        '<div class="section-title">'
-        '📋 Extracted Information'
-        '</div>',
+        '<div class="section-title">📋 Extracted Information</div>',
         unsafe_allow_html=True
     )
 
     col1, col2 = st.columns(2)
-
-
-    # -----------------------------------------------------
-    # LEFT COLUMN
-    # -----------------------------------------------------
 
     with col1:
 
@@ -839,16 +756,12 @@ if st.session_state.ocr_text:
 
         else:
 
-            st.warning(
-                "Sex could not be detected."
-            )
-
+            st.warning("Sex could not be detected.")
 
         if st.session_state.ocr_height:
 
             st.success(
-                f"Height: "
-                f"{st.session_state.ocr_height:.1f} cm"
+                f"Height: {st.session_state.ocr_height:.1f} cm"
             )
 
         else:
@@ -856,11 +769,6 @@ if st.session_state.ocr_text:
             st.warning(
                 "Height could not be detected."
             )
-
-
-    # -----------------------------------------------------
-    # RIGHT COLUMN
-    # -----------------------------------------------------
 
     with col2:
 
@@ -876,12 +784,10 @@ if st.session_state.ocr_text:
                 "Age could not be detected."
             )
 
-
         if st.session_state.ocr_weight:
 
             st.success(
-                f"Weight: "
-                f"{st.session_state.ocr_weight:.1f} kg"
+                f"Weight: {st.session_state.ocr_weight:.1f} kg"
             )
 
         else:
@@ -890,33 +796,27 @@ if st.session_state.ocr_text:
                 "Weight could not be detected."
             )
 
-
-    # =====================================================
-    # AUTO FILL FORM
-    # =====================================================
+    # -----------------------------------------------------
+    # AUTO FILL
+    # -----------------------------------------------------
 
     if st.button(
         "🤖 Auto Fill Form",
         use_container_width=True
     ):
 
-        # Sex
         if st.session_state.ocr_sex is not None:
 
             st.session_state.sex = (
                 st.session_state.ocr_sex
             )
 
-
-        # Age
         if st.session_state.ocr_age is not None:
 
             st.session_state.age = (
                 st.session_state.ocr_age
             )
 
-
-        # Height
         if st.session_state.ocr_height is not None:
 
             st.session_state.height_cm = (
@@ -927,8 +827,6 @@ if st.session_state.ocr_text:
                 "Centimeters (cm)"
             )
 
-
-        # Weight
         if st.session_state.ocr_weight is not None:
 
             st.session_state.weight_kg = (
@@ -945,21 +843,17 @@ if st.session_state.ocr_text:
                 "Kilograms (kg)"
             )
 
-
         st.success(
             "Information automatically filled into the form."
         )
 
         st.rerun()
 
-
-    # =====================================================
+    # -----------------------------------------------------
     # RAW OCR TEXT
-    # =====================================================
+    # -----------------------------------------------------
 
-    with st.expander(
-        "🔎 View Raw Extracted Text"
-    ):
+    with st.expander("🔎 View Raw Extracted Text"):
 
         st.text(
             st.session_state.ocr_text
@@ -971,16 +865,14 @@ if st.session_state.ocr_text:
 # =========================================================
 
 st.markdown(
-    '<div class="section-title">'
-    '📝 BMI Information'
-    '</div>',
+    '<div class="section-title">📝 BMI Information</div>',
     unsafe_allow_html=True
 )
 
 
-# =========================================================
+# ---------------------------------------------------------
 # SEX
-# =========================================================
+# ---------------------------------------------------------
 
 sex = st.selectbox(
     "Sex",
@@ -989,9 +881,9 @@ sex = st.selectbox(
 )
 
 
-# =========================================================
+# ---------------------------------------------------------
 # AGE
-# =========================================================
+# ---------------------------------------------------------
 
 age = st.number_input(
     "Age",
@@ -1098,17 +990,13 @@ else:
 
 
 # =========================================================
-# CALCULATE BMI
+# CALCULATE BMI BUTTON
 # =========================================================
 
 if st.button(
     "📊 Calculate BMI",
     use_container_width=True
 ):
-
-    # -----------------------------------------------------
-    # VALIDATION
-    # -----------------------------------------------------
 
     if age <= 0:
 
@@ -1130,10 +1018,6 @@ if st.button(
 
     else:
 
-        # -------------------------------------------------
-        # BMI
-        # -------------------------------------------------
-
         bmi = calculate_bmi(
             weight_kg,
             height_cm
@@ -1141,23 +1025,11 @@ if st.button(
 
         category = get_category(bmi)
 
-
-        # -------------------------------------------------
-        # HEALTHY / IDEAL WEIGHT
-        # -------------------------------------------------
-
-        (
-            ideal_weight,
-            healthy_min,
-            healthy_max
-        ) = calculate_healthy_weight_range(
-            height_cm
+        ideal_weight, healthy_min, healthy_max = (
+            calculate_healthy_weight_range(
+                height_cm
+            )
         )
-
-
-        # -------------------------------------------------
-        # CALORIES
-        # -------------------------------------------------
 
         calories = calculate_calories(
             sex,
@@ -1166,43 +1038,19 @@ if st.button(
             height_cm
         )
 
-
-        # -------------------------------------------------
-        # SAVE RESULTS
-        # -------------------------------------------------
-
         st.session_state.bmi_result = bmi
+        st.session_state.bmi_category = category
 
-        st.session_state.bmi_category = (
-            category
-        )
+        st.session_state.ideal_weight = ideal_weight
+        st.session_state.healthy_weight_min = healthy_min
+        st.session_state.healthy_weight_max = healthy_max
 
-        st.session_state.ideal_weight = (
-            ideal_weight
-        )
-
-        st.session_state.healthy_weight_min = (
-            healthy_min
-        )
-
-        st.session_state.healthy_weight_max = (
-            healthy_max
-        )
-
-        st.session_state.calories_result = (
-            calories
-        )
-
-        st.success(
-            "BMI calculated successfully."
-        )
+        st.session_state.calories_result = calories
 
 
 # =========================================================
 # RESULT BOX
 # =========================================================
-
-
 
 if st.session_state.bmi_result is not None:
 
@@ -1213,115 +1061,77 @@ if st.session_state.bmi_result is not None:
     healthy_min = st.session_state.healthy_weight_min
     healthy_max = st.session_state.healthy_weight_max
 
-    # -----------------------------------------------------
-    # CATEGORY COLORS
-    # -----------------------------------------------------
-
-    if category == "Underweight":
-        category_background = "#dbeafe"
-        category_color = "#1d4ed8"
-
-    elif category == "Normal weight":
-        category_background = "#dcfce7"
-        category_color = "#15803d"
-
-    elif category == "Overweight":
-        category_background = "#fef3c7"
-        category_color = "#b45309"
-
-    else:
-        category_background = "#fee2e2"
-        category_color = "#dc2626"
-
-    # -----------------------------------------------------
-    # RESULT TITLE
-    # -----------------------------------------------------
-
     st.markdown(
         '<div class="section-title">📊 Your Result</div>',
         unsafe_allow_html=True
     )
 
-    # -----------------------------------------------------
-    # RESULT BOX HTML
-    # -----------------------------------------------------
-
-    result_html = f"""
-<div class="result-box">
-
-    <div class="result-title">
-        YOUR BMI
-    </div>
-
-    <div class="bmi-number">
-        {bmi:.1f}
-    </div>
-
-    <div
-        class="category"
-        style="
-            background:{category_background};
-            color:{category_color};
-        "
-    >
-        {category}
-    </div>
-
-    <div class="result-details">
-
-        <div class="result-item">
-
-            <div class="result-icon">
-                🎯
-            </div>
-
-            <div class="result-content">
-
-                <div class="result-label">
-                    Ideal Weight
-                </div>
-
-                <div class="result-value">
-                    {ideal_weight:.1f} kg
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="result-item">
-
-            <div class="result-icon">
-                ⚖️
-            </div>
-
-            <div class="result-content">
-
-                <div class="result-label">
-                    Healthy Weight Range
-                </div>
-
-                <div class="result-value">
-                    {healthy_min:.1f} – {healthy_max:.1f} kg
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-"""
-
-    # IMPORTANT:
-    # Send the HTML directly to st.markdown.
-    # Do NOT use st.write(), st.code(), or Markdown ``` around it.
-
     st.markdown(
-        result_html,
+        f"""
+        <div class="result-box">
+
+            <div class="result-title">
+                YOUR BMI
+            </div>
+
+            <div class="bmi-number">
+                {bmi:.1f}
+            </div>
+
+            <div class="category">
+                {category}
+            </div>
+
+            <div class="result-details">
+
+                <div class="result-item">
+
+                    <div class="result-icon">
+                        🎯
+                    </div>
+
+                    <div class="result-content">
+
+                        <div class="result-label">
+                            Ideal Weight
+                        </div>
+
+                        <div class="result-value">
+                            {ideal_weight:.1f} kg
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="result-item">
+
+                    <div class="result-icon">
+                        ⚖️
+                    </div>
+
+                    <div class="result-content">
+
+                        <div class="result-label">
+                            Healthy Weight Range
+                        </div>
+
+                        <div class="result-value">
+                            {healthy_min:.1f} – {healthy_max:.1f} kg
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+        """,
         unsafe_allow_html=True
     )
+
 
     # =====================================================
     # CALORIES
@@ -1343,6 +1153,7 @@ if st.session_state.bmi_result is not None:
             "This estimate uses the Mifflin-St Jeor equation "
             "with a sedentary activity factor of 1.2."
         )
+
 
     # =====================================================
     # BMI REFERENCE
@@ -1372,7 +1183,6 @@ if st.session_state.bmi_result is not None:
     )
 
 
-
 # =========================================================
 # RESET BUTTON
 # =========================================================
@@ -1393,20 +1203,14 @@ st.button(
 st.markdown(
     """
     <div class="footer">
-
-        BMI Calculator • Photo OCR • Auto Fill •
-        Calorie Estimate
-
+        BMI Calculator • Photo OCR • Auto Fill • Calorie Estimate <br>
+        Najma Hassan |  U-Learns
         <br><br>
-
         <small>
-        This calculator provides general estimates for
-        educational purposes and is not a substitute
-        for professional medical advice.
+        This calculator provides general estimates for educational purposes
+        and is not a substitute for professional medical advice.
         </small>
-
     </div>
     """,
     unsafe_allow_html=True
 )
-
