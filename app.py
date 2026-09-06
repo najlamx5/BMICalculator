@@ -1,6 +1,7 @@
 #```python
 import re
 import streamlit as st
+import streamlit.components.v1 as components
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import pytesseract
 
@@ -83,11 +84,6 @@ for key, value in defaults.items():
 # =========================================================
 
 def reset_application():
-    """
-    Reset the complete application to its default state.
-    This function is used as a button callback so that
-    widget-related session state is safely updated.
-    """
 
     st.session_state.sex = DEFAULT_SEX
     st.session_state.age = DEFAULT_AGE
@@ -119,7 +115,7 @@ def reset_application():
     st.session_state.healthy_weight_min = None
     st.session_state.healthy_weight_max = None
 
-    # Change uploader key so Streamlit clears uploaded file
+    # Change uploader key to clear uploaded photo
     st.session_state.uploader_key += 1
 
 
@@ -388,6 +384,7 @@ def extract_weight(text):
             weight = float(value)
 
             if 10 <= weight <= 300:
+
                 return round(weight, 1)
 
     # Weight in pounds
@@ -453,6 +450,7 @@ def extract_height(text):
             height = float(value)
 
             if 50 <= height <= 250:
+
                 return round(height, 1)
 
     # Feet and inches
@@ -550,78 +548,6 @@ st.markdown(
         margin-bottom: 12px;
     }
 
-    .result-box {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 18px;
-        padding: 28px;
-        margin-top: 20px;
-        margin-bottom: 25px;
-        text-align: center;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    }
-
-    .result-title {
-        font-size: 15px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        margin-bottom: 8px;
-    }
-
-    .bmi-number {
-        font-size: 58px;
-        font-weight: 800;
-        line-height: 1.1;
-        margin: 5px 0 10px 0;
-    }
-
-    .category {
-        display: inline-block;
-        padding: 8px 18px;
-        border-radius: 25px;
-        font-size: 16px;
-        font-weight: 700;
-        margin-bottom: 25px;
-        background: #e8f5e9;
-    }
-
-    .result-details {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        text-align: left;
-    }
-
-    .result-item {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 18px;
-    }
-
-    .result-icon {
-        font-size: 28px;
-        min-width: 35px;
-    }
-
-    .result-content {
-        flex: 1;
-    }
-
-    .result-label {
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-
-    .result-value {
-        font-size: 19px;
-        font-weight: 800;
-    }
-
     .info-card {
         padding: 20px;
         border-radius: 14px;
@@ -635,22 +561,6 @@ st.markdown(
         font-size: 13px;
         margin-top: 35px;
         padding-top: 20px;
-    }
-
-    @media (max-width: 700px) {
-
-        .result-details {
-            grid-template-columns: 1fr;
-        }
-
-        .bmi-number {
-            font-size: 48px;
-        }
-
-        .result-box {
-            padding: 20px;
-        }
-
     }
 
     </style>
@@ -694,43 +604,53 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
 
-    image = Image.open(uploaded_file)
+    try:
 
-    st.session_state.uploaded_image = image
+        image = Image.open(uploaded_file)
 
-    st.image(
-        image,
-        caption="Uploaded Image",
-        use_container_width=True
-    )
+        st.session_state.uploaded_image = image
 
-    if st.button(
-        "🔍 Extract Information",
-        use_container_width=True
-    ):
+        st.image(
+            image,
+            caption="Uploaded Image",
+            use_container_width=True
+        )
 
-        with st.spinner("Reading information from the image..."):
+        if st.button(
+            "🔍 Extract Information",
+            use_container_width=True
+        ):
 
-            try:
+            with st.spinner(
+                "Reading information from the image..."
+            ):
 
-                text = extract_information(image)
+                try:
 
-                st.session_state.ocr_text = text
+                    text = extract_information(image)
 
-                st.session_state.ocr_sex = extract_sex(text)
-                st.session_state.ocr_age = extract_age(text)
-                st.session_state.ocr_height = extract_height(text)
-                st.session_state.ocr_weight = extract_weight(text)
+                    st.session_state.ocr_text = text
 
-                st.success(
-                    "Information extraction completed."
-                )
+                    st.session_state.ocr_sex = extract_sex(text)
+                    st.session_state.ocr_age = extract_age(text)
+                    st.session_state.ocr_height = extract_height(text)
+                    st.session_state.ocr_weight = extract_weight(text)
 
-            except Exception as e:
+                    st.success(
+                        "Information extraction completed."
+                    )
 
-                st.error(
-                    f"Could not process the image: {e}"
-                )
+                except Exception as e:
+
+                    st.error(
+                        f"Could not process the image: {e}"
+                    )
+
+    except Exception as e:
+
+        st.error(
+            f"Could not open the uploaded image: {e}"
+        )
 
 
 # =========================================================
@@ -756,7 +676,9 @@ if st.session_state.ocr_text:
 
         else:
 
-            st.warning("Sex could not be detected.")
+            st.warning(
+                "Sex could not be detected."
+            )
 
         if st.session_state.ocr_height:
 
@@ -853,7 +775,9 @@ if st.session_state.ocr_text:
     # RAW OCR TEXT
     # -----------------------------------------------------
 
-    with st.expander("🔎 View Raw Extracted Text"):
+    with st.expander(
+        "🔎 View Raw Extracted Text"
+    ):
 
         st.text(
             st.session_state.ocr_text
@@ -870,9 +794,9 @@ st.markdown(
 )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # SEX
-# ---------------------------------------------------------
+# =========================================================
 
 sex = st.selectbox(
     "Sex",
@@ -881,9 +805,9 @@ sex = st.selectbox(
 )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # AGE
-# ---------------------------------------------------------
+# =========================================================
 
 age = st.number_input(
     "Age",
@@ -1052,8 +976,6 @@ if st.button(
 # RESULT BOX
 # =========================================================
 
-
-
 if st.session_state.bmi_result is not None:
 
     bmi = st.session_state.bmi_result
@@ -1064,27 +986,7 @@ if st.session_state.bmi_result is not None:
     healthy_max = st.session_state.healthy_weight_max
 
     # -----------------------------------------------------
-    # CATEGORY COLOR
-    # -----------------------------------------------------
-
-    if category == "Underweight":
-        category_background = "#dbeafe"
-        category_color = "#1d4ed8"
-
-    elif category == "Normal weight":
-        category_background = "#dcfce7"
-        category_color = "#15803d"
-
-    elif category == "Overweight":
-        category_background = "#fef3c7"
-        category_color = "#b45309"
-
-    else:
-        category_background = "#fee2e2"
-        category_color = "#dc2626"
-
-    # -----------------------------------------------------
-    # SECTION TITLE
+    # RESULT SECTION TITLE
     # -----------------------------------------------------
 
     st.markdown(
@@ -1093,10 +995,152 @@ if st.session_state.bmi_result is not None:
     )
 
     # -----------------------------------------------------
-    # RESULT BOX
+    # CATEGORY COLORS
+    # -----------------------------------------------------
+
+    if category == "Underweight":
+
+        category_background = "#dbeafe"
+        category_color = "#1d4ed8"
+
+    elif category == "Normal weight":
+
+        category_background = "#dcfce7"
+        category_color = "#15803d"
+
+    elif category == "Overweight":
+
+        category_background = "#fef3c7"
+        category_color = "#b45309"
+
+    else:
+
+        category_background = "#fee2e2"
+        category_color = "#dc2626"
+
+    # -----------------------------------------------------
+    # HTML RESULT BOX
     # -----------------------------------------------------
 
     result_html = f"""
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<style>
+
+html, body {{
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background: transparent;
+}}
+
+body {{
+    font-family: Arial, Helvetica, sans-serif;
+}}
+
+.result-box {{
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 28px;
+    margin: 5px 0 20px 0;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}}
+
+.result-title {{
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #475569;
+    margin-bottom: 8px;
+}}
+
+.bmi-number {{
+    font-size: 58px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #0f172a;
+    margin: 5px 0 10px 0;
+}}
+
+.category {{
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    background-color: {category_background};
+    color: {category_color};
+}}
+
+.result-details {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    text-align: left;
+}}
+
+.result-item {{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px;
+}}
+
+.result-icon {{
+    font-size: 28px;
+    min-width: 35px;
+}}
+
+.result-content {{
+    flex: 1;
+}}
+
+.result-label {{
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 5px;
+}}
+
+.result-value {{
+    font-size: 19px;
+    font-weight: 800;
+    color: #0f172a;
+}}
+
+@media (max-width: 700px) {{
+
+    .result-details {{
+        grid-template-columns: 1fr;
+    }}
+
+    .bmi-number {{
+        font-size: 48px;
+    }}
+
+    .result-box {{
+        padding: 20px;
+    }}
+
+}}
+
+</style>
+
+</head>
+
+<body>
+
 <div class="result-box">
 
     <div class="result-title">
@@ -1107,9 +1151,7 @@ if st.session_state.bmi_result is not None:
         {bmi:.1f}
     </div>
 
-    <div class="category"
-         style="background-color: {category_background};
-                color: {category_color};">
+    <div class="category">
         {category}
     </div>
 
@@ -1158,15 +1200,20 @@ if st.session_state.bmi_result is not None:
     </div>
 
 </div>
+
+</body>
+
+</html>
 """
 
-    # IMPORTANT:
-    # Render the HTML directly.
-    # Do NOT use st.write() or st.code() here.
+    # -----------------------------------------------------
+    # RENDER RESULT BOX
+    # -----------------------------------------------------
 
-    st.markdown(
+    components.html(
         result_html,
-        unsafe_allow_html=True
+        height=320,
+        scrolling=False
     )
 
 
@@ -1219,8 +1266,6 @@ if st.session_state.bmi_result is not None:
         }
     )
 
- 
-
 
 # =========================================================
 # RESET BUTTON
@@ -1242,14 +1287,18 @@ st.button(
 st.markdown(
     """
     <div class="footer">
-        BMI Calculator • Photo OCR • Auto Fill • Calorie Estimate <br>
-        Najma Hassan |  U-Learns
+
+        BMI Calculator • Photo OCR • Auto Fill • Calorie Estimate
+
         <br><br>
+
         <small>
         This calculator provides general estimates for educational purposes
         and is not a substitute for professional medical advice.
         </small>
+
     </div>
     """,
     unsafe_allow_html=True
 )
+
