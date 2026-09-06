@@ -1052,6 +1052,8 @@ if st.button(
 # RESULT BOX
 # =========================================================
 
+
+
 if st.session_state.bmi_result is not None:
 
     bmi = st.session_state.bmi_result
@@ -1061,74 +1063,109 @@ if st.session_state.bmi_result is not None:
     healthy_min = st.session_state.healthy_weight_min
     healthy_max = st.session_state.healthy_weight_max
 
+    # -----------------------------------------------------
+    # CATEGORY COLOR
+    # -----------------------------------------------------
+
+    if category == "Underweight":
+        category_background = "#dbeafe"
+        category_color = "#1d4ed8"
+
+    elif category == "Normal weight":
+        category_background = "#dcfce7"
+        category_color = "#15803d"
+
+    elif category == "Overweight":
+        category_background = "#fef3c7"
+        category_color = "#b45309"
+
+    else:
+        category_background = "#fee2e2"
+        category_color = "#dc2626"
+
+    # -----------------------------------------------------
+    # SECTION TITLE
+    # -----------------------------------------------------
+
     st.markdown(
         '<div class="section-title">📊 Your Result</div>',
         unsafe_allow_html=True
     )
 
-    st.markdown(
-        f"""
-        <div class="result-box">
+    # -----------------------------------------------------
+    # RESULT BOX
+    # -----------------------------------------------------
 
-            <div class="result-title">
-                YOUR BMI
+    result_html = f"""
+<div class="result-box">
+
+    <div class="result-title">
+        YOUR BMI
+    </div>
+
+    <div class="bmi-number">
+        {bmi:.1f}
+    </div>
+
+    <div class="category"
+         style="background-color: {category_background};
+                color: {category_color};">
+        {category}
+    </div>
+
+    <div class="result-details">
+
+        <div class="result-item">
+
+            <div class="result-icon">
+                🎯
             </div>
 
-            <div class="bmi-number">
-                {bmi:.1f}
-            </div>
+            <div class="result-content">
 
-            <div class="category">
-                {category}
-            </div>
-
-            <div class="result-details">
-
-                <div class="result-item">
-
-                    <div class="result-icon">
-                        🎯
-                    </div>
-
-                    <div class="result-content">
-
-                        <div class="result-label">
-                            Ideal Weight
-                        </div>
-
-                        <div class="result-value">
-                            {ideal_weight:.1f} kg
-                        </div>
-
-                    </div>
-
+                <div class="result-label">
+                    Ideal Weight
                 </div>
 
-
-                <div class="result-item">
-
-                    <div class="result-icon">
-                        ⚖️
-                    </div>
-
-                    <div class="result-content">
-
-                        <div class="result-label">
-                            Healthy Weight Range
-                        </div>
-
-                        <div class="result-value">
-                            {healthy_min:.1f} – {healthy_max:.1f} kg
-                        </div>
-
-                    </div>
-
+                <div class="result-value">
+                    {ideal_weight:.1f} kg
                 </div>
 
             </div>
 
         </div>
-        """,
+
+        <div class="result-item">
+
+            <div class="result-icon">
+                ⚖️
+            </div>
+
+            <div class="result-content">
+
+                <div class="result-label">
+                    Healthy Weight Range
+                </div>
+
+                <div class="result-value">
+                    {healthy_min:.1f} – {healthy_max:.1f} kg
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+"""
+
+    # IMPORTANT:
+    # Render the HTML directly.
+    # Do NOT use st.write() or st.code() here.
+
+    st.markdown(
+        result_html,
         unsafe_allow_html=True
     )
 
@@ -1181,6 +1218,8 @@ if st.session_state.bmi_result is not None:
             ]
         }
     )
+
+ 
 
 
 # =========================================================
