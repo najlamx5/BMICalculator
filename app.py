@@ -1290,6 +1290,7 @@ st.markdown(
 
         BMI Calculator • Photo OCR • Auto Fill • Calorie Estimate
         Najma Hassan | U-Learns 
+        September 2026
 
       
 
