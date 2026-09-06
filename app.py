@@ -1289,13 +1289,14 @@ st.markdown(
     <div class="footer">
 
         BMI Calculator • Photo OCR • Auto Fill • Calorie Estimate
+        Najma Hassan | U-Learns 
 
-        <br><br>
+      
 
-        <small>
+      
         This calculator provides general estimates for educational purposes
         and is not a substitute for professional medical advice.
-        </small>
+       
 
     </div>
     """,
